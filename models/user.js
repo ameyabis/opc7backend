@@ -1,15 +1,33 @@
 'use strict';
-const { Sequelize, DataTypes } = require("sequelize");
-const sequelize = new Sequelize("mysql::memory");
+const Sequelize = require("sequelize");
+
+const sequelize = require("../util/database");
 
 const User = sequelize.define("user", {
-    email: DataTypes.STRING,
-    surname: DataTypes.STRING,
-    firstname: DataTypes.STRING,
-    password: DataTypes.STRING,
-    isAdmin: DataTypes.BOOLEAN
-});
+  id: {
+    allowNull: false,
+    autoIncrement: true,
+    primaryKey: true,
+    type: Sequelize.INTEGER
+  },
 
-(async () => {
-  await sequelize.sync({force:true});
-})();
+  email: { allowNull: false, type: Sequelize.STRING },
+
+  surname: { allowNull: false, type: Sequelize.STRING },
+
+  firstname: { allowNull: false, type: Sequelize.STRING },
+
+  password: { allowNull: false, type: Sequelize.STRING },
+
+  isAdmin: { allowNull: false, type: Sequelize.BOOLEAN },
+
+  createdAt: {
+    allowNull: false,
+    type: Sequelize.DATE
+  },
+  updatedAt: {
+    allowNull: false,
+    type: Sequelize.DATE
+  }
+});
+ module.exports = User
