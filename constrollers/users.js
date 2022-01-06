@@ -1,9 +1,9 @@
 const bcrypt = require('bcrypt');
-const jwtUtils = require('../util/jwt.utils');
+const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
 
-exports.signup = async (req, res, next) => {
+exports.signup = async (req, res, _next) => {
     const email = req.body.email;
     const surname = req.body.surname;
     const firstname = req.body.firstname;
@@ -31,7 +31,7 @@ exports.signup = async (req, res, next) => {
                         'userId': user.id
                     })
                 })
-                .catch(function(err) {
+                .catch(function() {
                     return res.status(500).json({ 'error': 'Impossible d\'ajouter l\'utilisateur' });
                 })
             });
@@ -44,34 +44,68 @@ exports.signup = async (req, res, next) => {
     })
 };
 
+exports.getOneLogin = (req, res, _next) => {
+    User.findByPk(req.params.id)
+    .then(login => res.status(200).json(login))
+    .catch(error => res.status(400).json({ error }))
+};
+
+exports.getLogin = (_req, res, _next) => {
+    User.findAll()
+    .then(posts => res.status(200).json(posts))
+    .catch(error => res.status(400).json({ error }));
+}
+
 exports.login = async (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
 
-    if (email == null || password == null) {
-        return res.status(400).json({ 'error': 'Manque un/des parametre(s)' });
-    }
-
-    await User.findOne({
-        where: { email: email }
-    })
-    .then(function(userFound) {
-        if (userFound) {
-            bcrypt.compare(password, userFound.password, function(errBycrypt, resBycrypt){
-                if(resBycrypt) {
-                    return res.status(200).json({
-                        'user': userFound.id,
-                        'token': jwtUtils.generateTokenForUser(userFound)
-                    });
-                } else {
-                    return res.status(403).json({ 'error': 'Mot de passe invalide' });
-                }
-            })
-        } else {
-            return res.status(404).json({ 'error' : 'L\'utilisateur n\'est pas enregistré' });
+    await User.findOne({ where: { email: email } })
+    .then(user => {
+        if (!user) {
+            return res.status(401).json({ error: 'Utilisateur non trouvé !'});
         }
+        bcrypt.compare(password, user.password)
+        .then(valid => {
+            if(!valid) {
+                return res.status(401).json({ error: 'Mot de passe incorrect !'});
+            }
+            res.status(200).json({
+                id: user.id,
+                token: jwt.sign(
+                    { id: user.id },
+                    process.env.RTOKEN,
+                    { expiresIn: '24h' },
+                )
+            });
+        })
+        .catch(error => res.status(500).json({ error }));     
     })
-    .catch(function(err) {
-        return res.status(500).json({ 'error': 'Impossible de vérifier l\'utilisateur' });
+    .catch(error => res.status(500).json({ error }));
+};
+
+exports.deleteLogin = (req, res, _next) => {
+    User.destroy({ 
+        where: { id: req.params.id } 
+    })
+    .then(() => {
+        return res.status(200).json({ message: 'suppression reussite !'})
+    })
+    .catch(error => res.status(500).json({ error }))
+};
+
+exports.updateLogin = (req, res, _next) => {
+    bcrypt.hash(req.body.password, 10, function ( err, bcryptedPassword ) {
+        User.update({
+            firstname : req.body.firstname,
+            surname : req.body.surname,
+            email : req.body.email,
+            password : bcryptedPassword
+        },
+        { where : { id: req.params.id }})
+        .then(() => {
+            return res.status(201).json({ message: 'Modification reussite ! '})
+        })
+        .catch(error => res.status(500).json({ error }))
     })
 };

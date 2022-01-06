@@ -29,5 +29,11 @@ const User = sequelize.define("user", {
     allowNull: false,
     type: Sequelize.DATE
   }
-});
- module.exports = User
+},{
+    classMethods: {
+      associate: function(models) {
+        models.User.hasMany(models.Post)
+      }
+    }
+  });
+ module.exports = User;

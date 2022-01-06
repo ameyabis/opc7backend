@@ -1,4 +1,6 @@
 const Post = require('../models/post');
+// const Profil = require('../models/user');
+const fs = require('fs');
 
 exports.createPost = (req, res, _next) => {
     const { idUSERS, title, content, attachment} = req.body
@@ -7,7 +9,7 @@ exports.createPost = (req, res, _next) => {
         idUSERS,
         title,
         content,
-        attachment,
+        attachment, //: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
         likes: 0,
         dislikes: 0,
         usersLiked: "",
@@ -27,7 +29,7 @@ exports.modifyPost = (req, res, _next) => {
     Post.update({
         title: req.body.title,
         content: req.body.content,
-        attachment: req.body.attachment,
+        attachment: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
     },
     { where: { id: req.params.id }}
     )
@@ -38,11 +40,13 @@ exports.modifyPost = (req, res, _next) => {
 };
 
 exports.deletePost = (req, res, _next) => {
-    Post.destroy({ 
-        where: { id: req.params.id } 
-    })
-    .then(() => {
-        return res.status(200).json({ message: 'suppression reussite !'})
+    Post.findByPk(req.params.id)
+    .then(post => {
+      const filename = post.attachment.split('/images/')[1];
+      fs.unlink(`images/${filename}`,() => {
+        Post.destroy({ where: { id: req.params.id }})
+        .then(() => res.status(200).json({ message: 'suppression reussite !'}))
+      })
     })
     .catch(error => res.status(500).json({ error }))
 }

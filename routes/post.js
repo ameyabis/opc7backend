@@ -3,9 +3,10 @@ const router = express.Router();
 
 const postCtrl = require('../constrollers/post');
 // const auth = require('../middleware/auth');
+const multer = require('../middleware/multer-config');
 
-router.post('/', postCtrl.createPost);
-router.put('/:id', postCtrl.modifyPost);
+router.post('/', multer, postCtrl.createPost);
+router.put('/:id', multer, postCtrl.modifyPost);
 router.delete('/:id', postCtrl.deletePost);
 router.get('/:id', postCtrl.getOnePost);
 router.get('/', postCtrl.getAllPosts);
