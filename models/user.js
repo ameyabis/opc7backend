@@ -1,7 +1,7 @@
 'use strict';
 const Sequelize = require("sequelize");
-
 const sequelize = require("../util/database");
+const Post = require('../models/post')
 
 const User = sequelize.define("user", {
   id: {
@@ -29,11 +29,9 @@ const User = sequelize.define("user", {
     allowNull: false,
     type: Sequelize.DATE
   }
-},{
-    classMethods: {
-      associate: function(models) {
-        models.User.hasMany(models.Post)
-      }
-    }
-  });
- module.exports = User;
+});
+
+User.hasMany(Post,{as:'posts',foreignKey:'userId'})
+
+
+module.exports = User;

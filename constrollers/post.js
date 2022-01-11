@@ -1,12 +1,12 @@
 const Post = require('../models/post');
-// const Profil = require('../models/user');
+const User = require('../models/user')
 const fs = require('fs');
 
 exports.createPost = (req, res, _next) => {
-    const { idUSERS, title, content, attachment} = req.body
+    const { userId, title, content, attachment} = req.body
 
     Post.create({
-        idUSERS,
+        userId,
         title,
         content,
         attachment, //: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
@@ -57,16 +57,16 @@ exports.getOnePost = (req, res, _next) => {
     .catch(error => res.status(400).json({ error }))
 };
 
-exports.getAllPosts = (_req, res, _next) => {
-    Post.findAll()
-    .then(posts => res.status(200).json(posts))
+exports.getAllPosts = async (_req, res, _next) => {
+    await Post.findAll()
+    .then(data => res.status(200).json(data))
     .catch(error => res.status(400).json({ error }));
 };
 
 exports.likeOnePost = (req, res, _next) => {
     const like = req.body.like;
 
-    Post.findByPk( req.params.id )
+    Post.findByPk( req.body.id )
       .then(post => {
         let message = null;
         if(like === 1) {

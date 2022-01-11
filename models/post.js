@@ -1,6 +1,7 @@
 'use strict';
 const Sequelize = require("sequelize");
 const sequelize = require("../util/database");
+const User = require('../models/user')
 
 const Post = sequelize.define("post", {
   id: {
@@ -9,8 +10,6 @@ const Post = sequelize.define("post", {
     primaryKey: true,
     type: Sequelize.INTEGER
   },
-
-  idUSERS: { allowNull: false, type: Sequelize.INTEGER, references: { model: 'Users', key: 'id'}},
 
   title: { allowNull: false, type: Sequelize.STRING },
 
@@ -26,6 +25,14 @@ const Post = sequelize.define("post", {
 
   usersDisliked: { allowNull: false, type: Sequelize.STRING},
 
+  userId : {
+    type:Sequelize.INTEGER,
+    references:{
+      model:User,
+      key:'userId'
+    }
+  },
+
   createdAt: {
     allowNull: false,
     type: Sequelize.DATE
@@ -34,16 +41,9 @@ const Post = sequelize.define("post", {
     allowNull: false,
     type: Sequelize.DATE
   }
-},{ 
-  classMethods : {
-    associate: function(models) {
-      models.Post.belongsTo(models.User, {
-        foreignKey: {
-          allowNull: false
-        }
-      })
-    }
-  }
 });
+
+Post.belongsTo(User,{foreignKey:'userId'});
+
 
 module.exports = Post;
