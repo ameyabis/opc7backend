@@ -5,7 +5,7 @@ const userCtrl = require('../constrollers/users');
 const bruteForce = require('../middleware/brute-force');
 
 router.post('/signup', userCtrl.signup);
-router.post('/login', bruteForce, userCtrl.login);
+router.post('/login', userCtrl.login);
 router.get('/login/:id', userCtrl.getOneLogin);
 router.get('/login', userCtrl.getLogin);
 router.put('/login/:id', userCtrl.updateLogin);
