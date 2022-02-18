@@ -3,8 +3,6 @@ const utils = require('../util/jwtUtils');
 const fs = require('fs');
 
 exports.createPost = (req, res, _next) => {
-  // const attachment = ''
-  
   const id = utils.getUserId(req.headers.authorization)
   models.User.findOne({
     attributes: ['id', 'email', 'firstname', 'surname'],
@@ -25,8 +23,8 @@ exports.createPost = (req, res, _next) => {
           UserId: user.id,
           likes: 0,
           dislikes: 0,
-          usersLike: 0,
-          usersDislike: 0
+          usersLike: '',
+          usersDislike: ''
         })
         .then((newPost) => {
           res.status(201).json(newPost)
@@ -53,15 +51,17 @@ exports.createPost = (req, res, _next) => {
 //       tilte: req.body.title,
 //       content: req.body.content,
 //       attachment: req.body.attachment
-//     })
+//     },
+//     { where: { id: req.params.id }}
+//     )
 //   })
 // }
 
 exports.modifyPost = (req, res, _next) => {
     models.Post.update({
-        title: req.body.title,
-        content: req.body.content,
-        attachment: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
+      title: req.body.title,
+      content: req.body.content,
+      attachment: req.body.attachment,
     },
     { where: { id: req.params.id }}
     )
@@ -113,30 +113,91 @@ exports.likeOnePost = (req, res, next) => {
   models.Post.findByPk(req.params.id)
     .then(post => {
       let message = null;
+      //ajout like
       if(like === 1) {
-        post.likes++
-        post.usersLike = req.body.userId;
+        var arrayLike = post.usersLike.split(',')
+        var idLike = 0;
 
-        message = "Vous aimez le post";
-      }
-      else if(like === -1){
-        post.dislikes++;
-        // post.usersDislike = req.body.userId;
-        message = "Vous n'aimez pas le post";
-      }
-
-      if (like === 0){
-        if (post.usersLike.find(userId => userId == req.body.userId) != undefined) {
-          post.likes--;
-          const filterUsersLike = post.usersLike.filter(elt => elt != req.body.userId);
-          console.log(filterUsersLike);
-          post.usersLike = filterUsersLike;
-          console.log(post.usersLike);
-          message = "J'aime retiré"
+        for(var i = 0; arrayLike[i] != req.body.userId; i++) {
+          if(arrayLike[i] != undefined){
+            idLike = i
+          } else {
+            break;
+          }
+        }
+        
+        idLike++
+        if (arrayLike[idLike] != undefined) {
+          message = "Vous avez deja like";
         } else {
-          post.dislikes--;
-          const filterUsersDislike = post.usersLike.filter(elt => elt != req.body.userId);
-          post.usersDislike = filterUsersDislike;
+          post.likes++
+          post.usersLike = post.usersLike + ',' + req.body.userId;
+  
+          message = "Vous aimez le post";
+        }
+      }
+      // ajout dislike
+      else if(like === -1){
+        var arrayDislike = post.usersDislike.split(',')
+        var idLike = 0;
+
+        for(var i = 0; arrayDislike[i] == req.body.userId; i++) {
+          if(arrayDislike[i] != undefined){
+            idLike = i
+          } else {
+            break;
+          }
+        }
+
+        idLike++
+        if (arrayDislike[idLike] != undefined) {
+          message = "Vous n'aimez pas déjà"
+        } else {
+          post.dislikes++
+          post.usersDislike = post.usersDislike + ',' + req.body.userId;
+
+          message = "Vous n'aimez pas le post";
+        }
+      }
+
+      //suppression like
+      if (like === 0){
+        var arrayLike = post.usersLike.split(',')
+        var idLike = 0;
+
+        for(var i = 0; arrayLike[i] != req.body.userId; i++){
+          idLike = i
+        }
+
+        if (arrayLike[idLike++] != undefined){
+          console.log(idLike)
+          post.likes--
+          var myIndex = arrayLike.indexOf(arrayLike[idLike])
+          if(myIndex !== -1) {
+            arrayLike.splice(myIndex, 1)
+          }
+          post.usersLike = arrayLike.join(',');
+          message = "J'aime retiré"
+        }
+      }
+
+      //suppression dislike
+      if (like === -2) {
+        var arrayLike = post.usersDislike.split(',')
+        console.log(post.usersDislike.split(','))
+        var idLike = 0;
+
+        for(var i = 0; arrayLike[i] != req.body.userId; i++){
+          idLike = i
+        }
+
+        if (arrayLike[idLike++] != undefined){
+          post.dislikes--
+          var myIndex = arrayLike.indexOf(arrayLike[idLike])
+          if (myIndex !== -1) {
+            arrayLike.splice(myIndex, 1)
+          }
+          post.usersDislike = arrayLike.join(',');
           message = "Je n'aime plus retiré";
         }
       }
