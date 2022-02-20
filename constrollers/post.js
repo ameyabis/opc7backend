@@ -40,36 +40,38 @@ exports.createPost = (req, res, _next) => {
   .catch(error => res.status(500).json(error))
 };
 
-// exports.modify = (req, res, _next) => {
-//   const id = utils.getUserId(req.headers.authorization);
-//   models.User.findOne({
-//     attributes: ['id', 'email', 'firstname', 'surname', 'isAdmin'],
-//     where: { id: id }
-//   })
-//   .then(user => {
-//     models.Post.update({
-//       tilte: req.body.title,
-//       content: req.body.content,
-//       attachment: req.body.attachment
-//     },
-//     { where: { id: req.params.id }}
-//     )
-//   })
-// }
-
 exports.modifyPost = (req, res, _next) => {
+  const id = utils.getUserId(req.headers.authorization);
+  models.User.findOne({
+    attributes: ['id', 'email', 'firstname', 'surname', 'isAdmin'],
+    where: { id: id }
+  })
+  .then(() => {
     models.Post.update({
       title: req.body.title,
       content: req.body.content,
-      attachment: req.body.attachment,
+      attachment: req.body.attachment
     },
     { where: { id: req.params.id }}
     )
-    .then(() => {
-        return res.status(201).json({ message: 'Modification reussite !' })
-    })
-    .catch(error => res.status(500).json({ error }))
-};
+    .then(() => res.end())
+    .catch(err => res.status(500).json(err))
+  })
+}
+
+// exports.modifyPost = (req, res, _next) => {
+//     models.Post.update({
+//       title: req.body.title,
+//       content: req.body.content,
+//       attachment: req.body.attachment,
+//     },
+//     { where: { id: req.params.id }}
+//     )
+//     .then(() => {
+//         return res.status(201).json({ message: 'Modification reussite !' })
+//     })
+//     .catch(error => res.status(500).json({ error }))
+// };
 
 exports.deletePost = (req, res, _next) => {
     models.Post.findByPk(req.params.id)
